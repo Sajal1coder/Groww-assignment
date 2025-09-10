@@ -119,7 +119,7 @@ export default function AddWidgetModal() {
         
         // Start countdown for rate limit errors
         if (result.apiError.type === 'rate_limit' && result.retryAfter) {
-          startRetryCountdown(result.retryAfter);
+          setRetryCountdown(result.retryAfter);
         }
       } else {
         toast.error(result.error || 'API test failed');
