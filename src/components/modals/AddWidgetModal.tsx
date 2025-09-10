@@ -343,7 +343,7 @@ export default function AddWidgetModal() {
               />
               <button
                 type="button"
-                onClick={testApi}
+                onClick={() => testApi()}
                 disabled={isTestingApi || !apiUrl.trim()}
                 className="btn-primary flex items-center space-x-2 px-4"
               >
