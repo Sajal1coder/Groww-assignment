@@ -69,9 +69,12 @@ export default function WidgetContainer({
   };
 
   const widgetStyle = {
-    width: 'fit-content',
-    minWidth: '320px',
-    maxWidth: '500px',
+    width: widget.config?.displayMode === 'table' ? 'fit-content' : 
+           widget.config?.displayMode === 'chart' ? 'fit-content' : 'fit-content',
+    minWidth: widget.config?.displayMode === 'table' ? '600px' : 
+              widget.config?.displayMode === 'chart' ? '800px' : '320px',
+    maxWidth: widget.config?.displayMode === 'table' ? 'none' : 
+              widget.config?.displayMode === 'chart' ? 'none' : '500px',
     height: 'auto'
   };
 

@@ -53,8 +53,14 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 relative overflow-hidden">
+      {/* Gradient Orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-purple-600/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute top-1/3 right-0 w-80 h-80 bg-gradient-to-br from-indigo-400/20 to-pink-500/20 rounded-full blur-3xl translate-x-1/2"></div>
+      <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-gradient-to-br from-cyan-400/25 to-blue-600/25 rounded-full blur-3xl translate-y-1/2"></div>
+      
+      <div className="relative z-10">
+        <Header />
       
       <main className="container mx-auto px-4 py-6">
         {widgets.length === 0 ? (
@@ -116,7 +122,8 @@ export default function Dashboard() {
         )}
       </main>
 
-      {showAddWidget && <AddWidgetModal />}
+        {showAddWidget && <AddWidgetModal />}
+      </div>
     </div>
   );
 }

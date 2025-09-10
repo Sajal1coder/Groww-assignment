@@ -37,6 +37,7 @@ export interface WidgetConfig {
   symbols?: string[];
   interval?: '1min' | '5min' | '15min' | '30min' | '60min' | 'daily' | 'weekly' | 'monthly';
   chartType?: 'line' | 'candlestick';
+  cardType?: 'default' | 'watchlist' | 'market-gainers' | 'performance' | 'financial';
   fields?: string[];
   refreshInterval?: number; // in seconds
   pageSize?: number;
