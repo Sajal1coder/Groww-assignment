@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Widget } from '@/types';
 import { 
   RefreshCw, 
@@ -17,12 +17,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
-  Eye
+  Eye,
+  Wifi,
+  WifiOff,
+  Shield,
+  Server
 } from 'lucide-react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import LoadingSpinner from '@/components/layout/LoadingSpinner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cachedFetch } from '@/services/apiCache';
+import { ApiErrorHandler, ApiError } from '@/services/apiErrorHandler';
+import ErrorDisplay from './ErrorDisplay';
 
 interface CustomWidgetProps {
   widget: Widget;
@@ -36,8 +42,10 @@ export default function CustomWidget({ widget }: CustomWidgetProps) {
   const [data, setData] = useState<CustomApiData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<ApiError | null>(null);
+  const [retryCountdown, setRetryCountdown] = useState<number>(0);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { autoRefresh, refreshInterval, updateWidgetData } = useDashboardStore();
+  const { autoRefresh, refreshInterval, updateWidgetData, updateWidget } = useDashboardStore();
   
   // Table view state
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,11 +55,12 @@ export default function CustomWidget({ widget }: CustomWidgetProps) {
   const [filterValue, setFilterValue] = useState('');
   const itemsPerPage = 10;
 
-  const fetchData = async (skipCache = false) => {
+  const fetchData = useCallback(async (skipCache = false) => {
     if (!widget.config?.apiUrl) return;
     
     setLoading(true);
     setError(null);
+    setApiError(null);
     
     try {
       const headers: Record<string, string> = {
@@ -72,22 +81,71 @@ export default function CustomWidget({ widget }: CustomWidgetProps) {
         {
           ttl,
           skipCache,
+          withRetry: true
         }
       );
 
       setData(Array.isArray(result) ? result : [result]);
       updateWidgetData(widget.id, result);
+      
+      // Clear any previous error state on successful fetch
+      updateWidget(widget.id, { lastError: undefined });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
-      setError(errorMessage);
+      let apiErr: ApiError;
+      
+      // Check if it's already an ApiError from our handler
+      if (err && typeof err === 'object' && 'type' in err) {
+        apiErr = err as ApiError;
+      } else {
+        // Parse the error using our error handler
+        apiErr = ApiErrorHandler.parseError(err);
+      }
+      
+      setApiError(apiErr);
+      setError(ApiErrorHandler.getErrorMessage(apiErr));
+      
+      // Store error state in widget for smart refresh logic
+      const errorState = {
+        type: apiErr.type,
+        message: apiErr.message,
+        timestamp: Date.now(),
+        retryAfter: apiErr.retryAfter,
+        retryCount: (widget.lastError?.retryCount || 0) + 1
+      };
+      
+      updateWidget(widget.id, { lastError: errorState });
+      
+      // Start countdown for rate limit errors
+      if (apiErr.type === 'rate_limit' && apiErr.retryAfter) {
+        startRetryCountdown(apiErr.retryAfter);
+      }
     } finally {
       setLoading(false);
+    }
+  }, [widget.config?.apiUrl, widget.config?.apiHeaders, widget.config?.refreshInterval, widget.id, widget.lastError?.retryCount, updateWidgetData, updateWidget]);
+
+  const startRetryCountdown = (seconds: number) => {
+    setRetryCountdown(seconds);
+    const interval = setInterval(() => {
+      setRetryCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleRetry = () => {
+    if (retryCountdown === 0) {
+      fetchData(true); // Skip cache on retry
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [widget.config?.apiUrl]);
+  }, [fetchData]);
 
   const getNestedValue = (obj: any, path: string): any => {
     return path.split('.').reduce((current, key) => {
@@ -862,17 +920,13 @@ export default function CustomWidget({ widget }: CustomWidgetProps) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 text-center">
-        <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-        <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</p>
-        <button
-          onClick={() => fetchData(true)}
-          className="flex items-center space-x-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          <RefreshCw className="w-3 h-3" />
-          <span>Retry</span>
-        </button>
-      </div>
+      <ErrorDisplay
+        error={error}
+        apiError={apiError}
+        retryCountdown={retryCountdown}
+        onRetry={handleRetry}
+        className="h-32"
+      />
     );
   }
 

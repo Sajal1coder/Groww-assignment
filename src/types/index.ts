@@ -30,6 +30,13 @@ export interface Widget {
   config: WidgetConfig;
   data?: any;
   lastUpdated?: string;
+  lastError?: {
+    type: 'rate_limit' | 'network' | 'auth' | 'server' | 'timeout' | 'unknown';
+    message: string;
+    timestamp: number;
+    retryAfter?: number;
+    retryCount?: number;
+  };
 }
 
 export interface WidgetConfig {

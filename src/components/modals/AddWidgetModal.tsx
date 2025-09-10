@@ -16,49 +16,16 @@ import {
   CheckCircle,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock,
+  Shield,
+  Wifi
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { testApiEndpoint, ApiTestResult } from '@/services/apiTester';
+import { ApiErrorHandler } from '@/services/apiErrorHandler';
 
-interface ApiTestResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  fields?: ApiField[];
-  responseTime?: number;
-}
-
-const testApiEndpoint = async (url: string, headers: Record<string, string>): Promise<ApiTestResult> => {
-  const startTime = Date.now();
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    const responseTime = Date.now() - startTime;
-    
-    // Extract fields from the response data
-    const fields = extractFieldsFromData(data);
-    
-    return { success: true, data, fields, responseTime };
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error',
-      responseTime
-    };
-  }
-};
+// Using the enhanced testApiEndpoint from services
 
 const extractFieldsFromData = (data: any, prefix = ''): ApiField[] => {
   const fields: ApiField[] = [];
@@ -123,12 +90,17 @@ export default function AddWidgetModal() {
   const [headerValue, setHeaderValue] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const testApi = async () => {
+  const [withRetry, setWithRetry] = useState(true);
+  const [retryCountdown, setRetryCountdown] = useState(0);
+
+  const testApi = async (useRetry = withRetry) => {
     if (!apiUrl.trim()) return;
     
     setIsTestingApi(true);
+    setApiTestResult(null);
+    
     try {
-      const result = await testApiEndpoint(apiUrl, apiHeaders);
+      const result = await testApiEndpoint(apiUrl, apiHeaders, useRetry);
       setApiTestResult(result);
       
       if (result.success && result.fields) {
@@ -138,12 +110,27 @@ export default function AddWidgetModal() {
         if (displayMode === 'chart') {
           autoSelectChartFields(result.fields);
         }
+        
+        toast.success(`API test successful! Found ${result.fields.length} fields`);
+      } else if (result.apiError) {
+        // Handle specific API errors
+        const errorMessage = ApiErrorHandler.getErrorMessage(result.apiError);
+        toast.error(errorMessage);
+        
+        // Start countdown for rate limit errors
+        if (result.apiError.type === 'rate_limit' && result.retryAfter) {
+          startRetryCountdown(result.retryAfter);
+        }
+      } else {
+        toast.error(result.error || 'API test failed');
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setApiTestResult({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       });
+      toast.error(errorMessage);
     } finally {
       setIsTestingApi(false);
     }

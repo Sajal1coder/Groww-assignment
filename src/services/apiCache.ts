@@ -1,3 +1,5 @@
+import { ApiErrorHandler, ApiError } from './apiErrorHandler';
+
 interface CacheEntry {
   data: any;
   timestamp: number;
@@ -146,23 +148,19 @@ export const apiCache = new ApiCache({
   cleanupInterval: 2 * 60 * 1000, // 2 minutes
 });
 
-// Enhanced fetch function with caching
+// Enhanced fetch function with caching and error handling
 export async function cachedFetch(
   url: string,
   options: RequestInit = {},
-  cacheOptions: { ttl?: number; skipCache?: boolean } = {}
+  cacheOptions: { ttl?: number; skipCache?: boolean; withRetry?: boolean } = {}
 ): Promise<any> {
-  const { ttl, skipCache = false } = cacheOptions;
+  const { ttl, skipCache = false, withRetry = true } = cacheOptions;
   const headers = options.headers as Record<string, string> || {};
 
   // Only cache GET requests
   const method = options.method?.toUpperCase() || 'GET';
   if (method !== 'GET' || skipCache) {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return await fetchWithErrorHandling(url, options, withRetry);
   }
 
   // Check cache first
@@ -171,18 +169,53 @@ export async function cachedFetch(
     return cachedData;
   }
 
-  // Fetch and cache
-  try {
+  // Fetch with error handling and cache
+  const data = await fetchWithErrorHandling(url, options, withRetry);
+  apiCache.set(url, data, headers, ttl);
+  return data;
+}
+
+async function fetchWithErrorHandling(
+  url: string, 
+  options: RequestInit, 
+  withRetry: boolean
+): Promise<any> {
+  const apiCall = async () => {
     const response = await fetch(url, options);
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Create a mock error object that matches axios structure for our error handler
+      const errorData = await response.text().then(text => {
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { message: text || response.statusText };
+        }
+      });
+      
+      const error = {
+        response: {
+          status: response.status,
+          data: errorData,
+          headers: Object.fromEntries(response.headers.entries())
+        },
+        message: `HTTP error! status: ${response.status}`
+      };
+      
+      throw error;
     }
 
-    const data = await response.json();
-    apiCache.set(url, data, headers, ttl);
-    return data;
-  } catch (error) {
-    throw error;
+    return response.json();
+  };
+
+  if (withRetry) {
+    return await ApiErrorHandler.executeWithRetry(apiCall, {
+      maxRetries: 3,
+      baseDelay: 1000,
+      maxDelay: 30000
+    });
+  } else {
+    return await apiCall();
   }
 }
 

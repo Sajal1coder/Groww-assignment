@@ -87,7 +87,7 @@ A modern, flexible dashboard built with Next.js that allows users to create and 
 - Automatic detection of numeric fields for visualization
 - Time-series support with date/timestamp recognition
 - **Example APIs**:
-  - `(https://api.coinbase.com/v2/exchange-rates?currency=BTC)` - Bitcoin prices
+  - `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo` - Bitcoin prices
 
 
 ### Dashboard Management

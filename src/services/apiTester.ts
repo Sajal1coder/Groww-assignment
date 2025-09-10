@@ -1,28 +1,47 @@
 import axios from 'axios';
 import { ApiField, ApiResponse } from '@/types';
+import { ApiErrorHandler, ApiError } from './apiErrorHandler';
 
 export interface ApiTestResult {
   success: boolean;
   data?: any;
   error?: string;
+  apiError?: ApiError;
   fields?: ApiField[];
   responseTime?: number;
+  canRetry?: boolean;
+  retryAfter?: number;
 }
 
 export async function testApiEndpoint(
   url: string, 
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  withRetry: boolean = false
 ): Promise<ApiTestResult> {
   const startTime = Date.now();
   
-  try {
-    const response = await axios.get(url, {
+  const apiCall = async () => {
+    return await axios.get(url, {
       headers: {
         'Content-Type': 'application/json',
         ...headers,
       },
-      timeout: 10000,
+      timeout: 15000, // Increased timeout for better reliability
     });
+  };
+
+  try {
+    let response;
+    
+    if (withRetry) {
+      response = await ApiErrorHandler.executeWithRetry(apiCall, {
+        maxRetries: 2, // Reduced retries for testing
+        baseDelay: 2000,
+        maxDelay: 10000
+      });
+    } else {
+      response = await apiCall();
+    }
 
     const responseTime = Date.now() - startTime;
     const fields = extractFieldsFromResponse(response.data);
@@ -34,10 +53,30 @@ export async function testApiEndpoint(
       responseTime,
     };
   } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    // Check if it's already an ApiError from our handler
+    if (error && typeof error === 'object' && 'type' in error) {
+      const apiError = error as ApiError;
+      return {
+        success: false,
+        error: ApiErrorHandler.getErrorMessage(apiError),
+        apiError,
+        responseTime,
+        canRetry: apiError.canRetry,
+        retryAfter: apiError.retryAfter,
+      };
+    }
+    
+    // Parse the error using our error handler
+    const apiError = ApiErrorHandler.parseError(error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-      responseTime: Date.now() - startTime,
+      error: ApiErrorHandler.getErrorMessage(apiError),
+      apiError,
+      responseTime,
+      canRetry: apiError.canRetry,
+      retryAfter: apiError.retryAfter,
     };
   }
 }
