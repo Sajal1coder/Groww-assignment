@@ -1,27 +1,27 @@
 # FinBoard - Customizable Finance Dashboard
 
-A modern, real-time finance dashboard built with Next.js that allows users to create and customize widgets for monitoring financial data.
+A modern, flexible dashboard built with Next.js that allows users to create and customize widgets for monitoring any type of data through REST APIs.
 
 ## 🚀 Features
 
 ### Core Functionality
-- **Drag & Drop Interface**: Intuitive widget management with react-beautiful-dnd
-- **Real-time Data**: Live financial data from Alpha Vantage API
-- **Multiple Widget Types**:
-  - Stock Table: Paginated table with search and sorting
-  - Stock Card: Detailed single stock view
-  - Price Chart: Interactive line charts with multiple intervals
-  - Watchlist: Personal favorite stocks tracker
-  - Market Movers: Top gainers, losers, and most active stocks
-  - Performance: Compare multiple stocks performance
+- **Drag & Drop Interface**: Intuitive widget management with HTML5 drag and drop
+- **Universal API Support**: Connect to any REST API endpoint
+- **Flexible Widget Types**:
+  - **Table View**: Display API data in sortable, searchable tables
+  - **Card View**: Clean key-value pair display for detailed information
+  - **Chart View**: Interactive charts with automatic numeric field detection
+  - **Custom View**: Flexible rendering for any API response structure
 
 ### Advanced Features
+- **Smart Field Detection**: Automatically identifies numeric fields for charts
+- **Flexible Data Handling**: Works with nested objects, arrays, and complex JSON structures
 - **State Management**: Zustand for efficient state handling
 - **Data Persistence**: LocalStorage integration for dashboard layouts
 - **Theme Support**: Light/Dark mode with system preference detection
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Responsive Design**: Auto-wrapping widget layout that adapts to screen size
 - **Error Handling**: Comprehensive error states and retry mechanisms
-- **Rate Limiting**: Smart API call management and caching
+- **API Caching**: Smart caching with TTL support to reduce API calls
 - **Export/Import**: Dashboard configuration backup and restore
 
 ## 🛠️ Technology Stack
@@ -30,10 +30,10 @@ A modern, real-time finance dashboard built with Next.js that allows users to cr
 - **Styling**: Tailwind CSS with custom components
 - **State Management**: Zustand with persistence
 - **Charts**: Recharts for data visualization
-- **Drag & Drop**: react-beautiful-dnd
-- **API**: Alpha Vantage for financial data
+- **Drag & Drop**: HTML5 native drag and drop API
+- **API Integration**: Universal REST API support with caching
 - **Icons**: Lucide React
-- **Notifications**: React Hot Toast
+- **Data Processing**: Automatic field detection and type inference
 
 ## 📦 Installation
 
@@ -48,60 +48,59 @@ A modern, real-time finance dashboard built with Next.js that allows users to cr
    npm install
    ```
 
-3. **Set up environment variables**
-   - Copy `.env.local` and add your Alpha Vantage API key
-   - Get a free API key from [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
-   ```env
-   ALPHA_VANTAGE_API_KEY=your_api_key_here
-   ```
-
-4. **Run the development server**
+3. **Run the development server**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
+4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🎯 Usage
 
 ### Getting Started
-1. **Add Your First Widget**: Click "Add Widget" to create your first financial widget
-2. **Choose Widget Type**: Select from 6 different widget types based on your needs
-3. **Configure Settings**: Set stock symbols, refresh intervals, and display options
+1. **Add Your First Widget**: Click "Add Widget" to create your first data widget
+2. **Enter API URL**: Provide any REST API endpoint that returns JSON data
+3. **Choose Display Type**: Select how you want to visualize the data
 4. **Arrange Layout**: Drag and drop widgets to organize your dashboard
 
-### Widget Types
+### Widget Display Types
 
-#### Stock Table
-- Display multiple stocks in a sortable, searchable table
-- Pagination support for large datasets
-- Real-time price updates with change indicators
+#### Table View
+- Display API data in a sortable, searchable table format
+- Automatic pagination for large datasets
+- Perfect for structured data with multiple records
+- **Example APIs**:
+  - `https://jsonplaceholder.typicode.com/users` - User directory
+  - `https://api.github.com/users/octocat/repos` - GitHub repositories
+  - `https://reqres.in/api/users` - Sample user data
 
-#### Stock Card
-- Detailed view of individual stock metrics
-- Day range, volume, and price change information
-- Clean, card-based design for easy scanning
+#### Card View
+- Clean key-value pair display for detailed information
+- Ideal for single records or object data
+- Automatically formats nested objects
+- **Example APIs**:
+  - `https://jsonplaceholder.typicode.com/users/1` - Single user profile
+  - `https://api.github.com/users/octocat` - GitHub user profile
+  - `https://httpbin.org/json` - Sample JSON object
 
-#### Price Chart
-- Interactive line charts with multiple time intervals
-- Support for intraday (5m, 15m, 30m, 1h) and daily data
-- Hover tooltips with detailed price information
+#### Chart View
+- Interactive line and candlestick charts
+- Automatic detection of numeric fields for visualization
+- Time-series support with date/timestamp recognition
+- **Example APIs**:
+  - `https://api.twelvedata.com/time_series?symbol=AAPL&interval=1day&apikey=demo` - Stock data
+  - `https://api.coindesk.com/v1/bpi/historical/close.json` - Bitcoin prices
+  - `https://api.exchangerate-api.com/v4/latest/USD` - Currency rates
 
-#### Watchlist
-- Personal collection of favorite stocks
-- Quick performance overview with trend indicators
-- Easy add/remove functionality
-
-#### Market Movers
-- Top gainers, losers, and most active stocks
-- Tabbed interface for easy navigation
-- Real-time market sentiment indicators
-
-#### Performance Comparison
-- Side-by-side performance comparison
-- Bar chart visualization of percentage changes
-- Ranked list with performance metrics
+#### Custom View
+- Flexible rendering for any API response structure
+- Handles complex nested data automatically
+- Adapts to different JSON schemas
+- **Example APIs**:
+  - `https://api.openweathermap.org/data/2.5/weather?q=London&appid=demo` - Weather data
+  - `https://dog.ceo/api/breeds/list/all` - Dog breeds list
+  - `https://catfact.ninja/fact` - Random cat facts
 
 ### Dashboard Management
 - **Auto Refresh**: Configure automatic data updates (15s to 5m intervals)
@@ -111,46 +110,69 @@ A modern, real-time finance dashboard built with Next.js that allows users to cr
 
 ## 🔧 Configuration
 
-### API Configuration
-The application uses Alpha Vantage API for financial data:
-- **Free Tier**: 5 requests per minute, 500 requests per day
-- **Rate Limiting**: Built-in request throttling and caching
-- **Error Handling**: Graceful fallbacks and retry mechanisms
-
 ### Widget Configuration
 Each widget can be customized with:
-- **Symbols**: Stock symbols to monitor
-- **Refresh Interval**: How often to update data
-- **Display Options**: Chart intervals, table page sizes
-- **Visual Settings**: Titles, colors, and layouts
+- **API URL**: Any REST endpoint that returns JSON data
+- **Display Type**: Table, Card, Chart, or Custom view
+- **Refresh Interval**: Auto-refresh from 15 seconds to 5 minutes
+- **Caching**: TTL-based caching to reduce API calls
+- **Visual Settings**: Custom titles and responsive layouts
+
+### API Requirements
+- **Format**: Must return valid JSON data
+- **CORS**: API should support cross-origin requests or use a proxy
+- **Rate Limits**: Built-in caching helps manage API quotas
+- **Authentication**: Currently supports public APIs (auth headers can be added)
 
 ## 📱 Responsive Design
 
-The dashboard is fully responsive and works on:
-- **Desktop**: Full feature set with drag & drop
-- **Tablet**: Touch-friendly interface with grid layout
-- **Mobile**: Optimized widget stacking and navigation
+The dashboard features an intelligent auto-wrapping layout:
+- **Desktop**: Widgets arrange in flexible rows, wrapping as needed
+- **Tablet**: Touch-friendly interface with optimized widget sizing
+- **Mobile**: Single-column layout with full-width widgets
+- **Auto-sizing**: Widgets automatically adjust based on content
+
+## 🌟 Example Use Cases
+
+### Financial Monitoring
+- Stock prices from Alpha Vantage or Twelve Data
+- Cryptocurrency rates from CoinDesk
+- Exchange rates from ExchangeRate-API
+
+### Development Tracking
+- GitHub repository stats and commits
+- API monitoring and health checks
+- Server metrics and performance data
+
+### Content Management
+- Blog post analytics
+- Social media metrics
+- E-commerce product data
+
+### General Data Visualization
+- Weather information
+- News feeds and updates
+- Any JSON API endpoint
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
 1. Push code to GitHub repository
 2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically on push
+3. Deploy automatically on push
 
 ### Other Platforms
-- **Netlify**: Static site deployment with serverless functions
+- **Netlify**: Static site deployment
 - **AWS**: S3 + CloudFront for static hosting
 - **Docker**: Containerized deployment for any platform
 
 ## 🔒 Security & Best Practices
 
-- **API Key Management**: Environment variables for sensitive data
-- **Rate Limiting**: Prevents API quota exhaustion
+- **CORS Handling**: Proper cross-origin request management
+- **Rate Limiting**: Built-in caching prevents API quota exhaustion
 - **Error Boundaries**: Graceful error handling and recovery
 - **Data Validation**: Input sanitization and type checking
-- **Caching Strategy**: Reduces API calls and improves performance
+- **Performance**: Smart caching and efficient re-rendering
 
 ## 🤝 Contributing
 
@@ -166,18 +188,19 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- **Alpha Vantage** for providing financial data API
+- **JSONPlaceholder** for providing free testing APIs
 - **Vercel** for hosting and deployment platform
 - **Next.js Team** for the amazing React framework
 - **Tailwind CSS** for the utility-first CSS framework
+- **Recharts** for beautiful data visualization components
 
 ## 📞 Support
 
 For support and questions:
 - Create an issue in the GitHub repository
 - Check the documentation for common solutions
-- Review the API documentation for data-related questions
+- Test with the provided example APIs to verify functionality
 
 ---
 
-Built with ❤️ for the finance community
+Built with ❤️ for the developer community

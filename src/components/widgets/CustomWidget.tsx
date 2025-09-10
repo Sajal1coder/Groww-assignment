@@ -294,7 +294,15 @@ export default function CustomWidget({ widget }: CustomWidgetProps) {
       const dataPoint: any = { index: index + 1 };
       numericFields.forEach(field => {
         const value = getNestedValue(item, field.apiField);
-        dataPoint[field.displayName] = typeof value === 'number' ? value : 0;
+        // Handle both numeric values and string numbers from APIs
+        if (typeof value === 'number') {
+          dataPoint[field.displayName] = value;
+        } else if (typeof value === 'string') {
+          const numericValue = parseFloat(value);
+          dataPoint[field.displayName] = !isNaN(numericValue) ? numericValue : 0;
+        } else {
+          dataPoint[field.displayName] = 0;
+        }
       });
       return dataPoint;
     });

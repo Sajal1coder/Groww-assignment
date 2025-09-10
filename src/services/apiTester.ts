@@ -87,8 +87,19 @@ function getFieldType(value: any): 'string' | 'number' | 'boolean' | 'date' {
   if (typeof value === 'boolean') return 'boolean';
   if (typeof value === 'number') return 'number';
   if (typeof value === 'string') {
-    // Try to detect if it's a date
+    // Try to detect if it's a date first
     if (isDateString(value)) return 'date';
+    
+    // Try to detect if it's a numeric string
+    const numericValue = parseFloat(value);
+    if (!isNaN(numericValue) && isFinite(numericValue) && value.trim() !== '') {
+      // Additional check to ensure it's actually a number string, not just contains numbers
+      const cleanValue = value.replace(/[,\s$%]/g, ''); // Remove common formatting
+      if (/^-?\d*\.?\d+$/.test(cleanValue)) {
+        return 'number';
+      }
+    }
+    
     return 'string';
   }
   return 'string';
