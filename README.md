@@ -80,27 +80,15 @@ A modern, flexible dashboard built with Next.js that allows users to create and 
 - Ideal for single records or object data
 - Automatically formats nested objects
 - **Example APIs**:
-  - `https://jsonplaceholder.typicode.com/users/1` - Single user profile
-  - `https://api.github.com/users/octocat` - GitHub user profile
-  - `https://httpbin.org/json` - Sample JSON object
+  - `[https://jsonplaceholder.typicode.com/users/1](https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=IBM&apikey=demo` - Single user profile
 
 #### Chart View
 - Interactive line and candlestick charts
 - Automatic detection of numeric fields for visualization
 - Time-series support with date/timestamp recognition
 - **Example APIs**:
-  - `https://api.twelvedata.com/time_series?symbol=AAPL&interval=1day&apikey=demo` - Stock data
-  - `https://api.coindesk.com/v1/bpi/historical/close.json` - Bitcoin prices
-  - `https://api.exchangerate-api.com/v4/latest/USD` - Currency rates
+  - `(https://api.coinbase.com/v2/exchange-rates?currency=BTC)` - Bitcoin prices
 
-#### Custom View
-- Flexible rendering for any API response structure
-- Handles complex nested data automatically
-- Adapts to different JSON schemas
-- **Example APIs**:
-  - `https://api.openweathermap.org/data/2.5/weather?q=London&appid=demo` - Weather data
-  - `https://dog.ceo/api/breeds/list/all` - Dog breeds list
-  - `https://catfact.ninja/fact` - Random cat facts
 
 ### Dashboard Management
 - **Auto Refresh**: Configure automatic data updates (15s to 5m intervals)
